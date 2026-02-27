@@ -16,9 +16,10 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["status_update", "new_admin_note", "complaint_resolved"],
+    enum: ["status_update", "new_admin_note", "complaint_resolved", "high_priority_alert"],
     default: "status_update",
   },
+  priority: { type: String, default: "normal" },
   read: {
     type: Boolean,
     default: false,

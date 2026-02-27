@@ -6,24 +6,24 @@ const {
   createComplaint,
   getComplaints,
   getComplaintById,
+  getVersionHistory,
+  checkDuplicate,
   updateComplaintStatus,
+  updateComplaintCost,
+  approveComplaint,
   deleteComplaint,
-} = require("../controllers/ComplaintController.js");
+  restoreComplaint,
+} = require("../controllers/complaintController");
 
-// Create complaint with file upload (authenticated users)
 router.post("/", auth, upload.array("images", 5), createComplaint);
-
-// Get complaints (filtered by user role)
 router.get("/", auth, getComplaints);
-
-// Get single complaint
+router.get("/check-duplicate", auth, checkDuplicate);
 router.get("/:id", auth, getComplaintById);
-
-// Update complaint status (admin only)
+router.get("/:id/versions", auth, getVersionHistory);
 router.put("/:id/update-status", auth, adminOnly, updateComplaintStatus);
-
-// Delete complaint
+router.put("/:id/cost", auth, adminOnly, updateComplaintCost);
+router.put("/:id/approve", auth, adminOnly, approveComplaint);
 router.delete("/:id", auth, deleteComplaint);
+router.post("/:id/restore", auth, adminOnly, restoreComplaint);
 
 module.exports = router;
-

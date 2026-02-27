@@ -1,9 +1,12 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
-// Generate JWT Token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+// Generate JWT Token with role
+const generateToken = (id, role) => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured in environment variables");
+  }
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
 };
@@ -11,7 +14,7 @@ const generateToken = (id) => {
 // Register User
 const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, roomNo, hostel } = req.body;
 
     // Validate input
     if (!name || !email || !password) {
@@ -36,12 +39,14 @@ const register = async (req, res) => {
       email,
       password,
       role: role || "student",
+      roomNo: roomNo || "",
+      hostel: hostel || "",
     });
 
     await user.save();
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Generate token with role
+    const token = generateToken(user._id, user.role);
 
     res.status(201).json({
       success: true,
@@ -52,12 +57,16 @@ const register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        roomNo: user.roomNo,
+        hostel: user.hostel,
       },
     });
   } catch (error) {
+    console.error("Registration error:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
@@ -65,13 +74,21 @@ const register = async (req, res) => {
 // Login User
 const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     // Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: "Please provide email and password",
+      });
+    }
+
+    // Validate role if provided
+    if (role && !["student", "admin"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role. Must be 'student' or 'admin'",
       });
     }
 
@@ -84,6 +101,14 @@ const login = async (req, res) => {
       });
     }
 
+    // Validate role match if role is provided
+    if (role && user.role !== role) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized role access",
+      });
+    }
+
     // Compare password
     const isPasswordCorrect = await user.comparePassword(password);
     if (!isPasswordCorrect) {
@@ -93,8 +118,8 @@ const login = async (req, res) => {
       });
     }
 
-    // Generate token
-    const token = generateToken(user._id);
+    // Generate token with role
+    const token = generateToken(user._id, user.role);
 
     res.status(200).json({
       success: true,
@@ -105,12 +130,16 @@ const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        roomNo: user.roomNo,
+        hostel: user.hostel,
       },
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: error.message || "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 };
