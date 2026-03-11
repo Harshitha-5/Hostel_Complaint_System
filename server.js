@@ -10,6 +10,10 @@ const adminRoutes = require("./routes/adminRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const featureToggleRoutes = require("./routes/featureToggleRoutes");
+const commentRoutes = require("./routes/commentRoutes");
+const archiveRoutes = require("./routes/archiveRoutes");
+const escalationRoutes = require("./routes/escalationRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 require("dotenv").config();
 
 const connectDB = require("./config/db");
@@ -121,6 +125,12 @@ app.use("/api/complaints", complaintRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/feature-toggles", featureToggleRoutes);
+
+// New feature routes
+app.use("/api/comments", commentRoutes);
+app.use("/api/archives", archiveRoutes);
+app.use("/api/escalations", escalationRoutes);
+app.use("/api/ai", aiRoutes);
 
 // 404 Not Found handler
 app.use((req, res) => {

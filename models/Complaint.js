@@ -11,8 +11,12 @@ const complaintSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["cleaning", "maintenance", "food", "water", "electricity", "electrical", "plumbing", "furniture", "internet", "other", "others"],
+    enum: ["cleaning", "maintenance", "food", "water", "electricity", "electrical", "plumbing", "furniture", "internet", "security", "other", "others"],
     default: "other",
+  },
+  subCategory: {
+    type: String,
+    default: "",
   },
   studentId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -21,15 +25,17 @@ const complaintSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "in_progress", "resolved"],
+    enum: ["pending", "in_progress", "resolved", "on_hold", "escalated"],
     default: "pending",
   },
   priority: {
     type: String,
-    enum: ["low", "medium", "high"],
+    enum: ["low", "medium", "high", "critical"],
     default: "medium",
   },
   images: [{ type: String }],
+  videos: [{ type: String }], // Support for video attachments
+  documents: [{ type: String }], // Support for document attachments
   adminNotes: { type: String, default: "" },
 
   // Cost estimation & budget tracking
@@ -77,6 +83,76 @@ const complaintSchema = new mongoose.Schema({
     default: "",
     maxlength: 1000,
   },
+  
+  // Assignment and ownership
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  assignedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+  assignedAt: {
+    type: Date,
+    default: null,
+  },
+  
+  // Location details
+  block: {
+    type: String,
+    default: "",
+  },
+  floor: {
+    type: String,
+    default: "",
+  },
+  roomNumber: {
+    type: String,
+    default: "",
+  },
+  
+  // Tags for better categorization
+  tags: [{
+    type: String,
+  }],
+  
+  // AI/Auto suggestions
+  suggestedSolution: {
+    type: String,
+    default: "",
+  },
+  aiConfidence: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: null,
+  },
+  
+  // Duplicate detection
+  isDuplicate: {
+    type: Boolean,
+    default: false,
+  },
+  duplicateOf: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Complaint",
+    default: null,
+  },
+  
+  // View count (for trending issues)
+  viewCount: {
+    type: Number,
+    default: 0,
+  },
+  
+  // Last activity timestamp
+  lastActivityAt: {
+    type: Date,
+    default: Date.now,
+  },
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
@@ -87,5 +163,33 @@ const complaintSchema = new mongoose.Schema({
 complaintSchema.pre("save", function () {
   this.updatedAt = new Date();
 });
+
+// Indexes for efficient querying
+complaintSchema.index({ studentId: 1, createdAt: -1 });
+complaintSchema.index({ status: 1, priority: 1 });
+complaintSchema.index({ category: 1, createdAt: -1 });
+complaintSchema.index({ assignedTo: 1, status: 1 });
+complaintSchema.index({ createdAt: -1 });
+complaintSchema.index({ lastActivityAt: -1 });
+
+// Text search index
+complaintSchema.index({ title: "text", description: "text", tags: "text" });
+
+// Static method to find similar complaints (for duplicate detection)
+complaintSchema.statics.findSimilar = async function(title, description, category, studentId, daysBack = 7) {
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - daysBack);
+  
+  return await this.find({
+    studentId: studentId,
+    category: category,
+    createdAt: { $gte: cutoffDate },
+    deletedAt: null,
+    $or: [
+      { title: { $regex: title.split(' ').slice(0, 3).join('|'), $options: 'i' } },
+      { description: { $regex: description.split(' ').slice(0, 5).join('|'), $options: 'i' } }
+    ]
+  }).limit(5);
+};
 
 module.exports = mongoose.model("Complaint", complaintSchema);

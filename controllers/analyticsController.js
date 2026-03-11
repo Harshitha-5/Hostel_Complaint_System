@@ -1,5 +1,7 @@
 const Complaint = require("../models/Complaint");
+const AnalyticsService = require("../services/analyticsService");
 
+const analyticsService = new AnalyticsService();
 const deletedFilter = { deletedAt: null };
 
 // Admin dashboard stats used by /api/admin/stats
@@ -183,8 +185,127 @@ const getPublicStatistics = async (req, res) => {
   }
 };
 
+// Get comprehensive dashboard analytics
+const getDashboardAnalytics = async (req, res) => {
+  try {
+    const { timeRange = 30 } = req.query;
+    const analytics = await analyticsService.getDashboardAnalytics(parseInt(timeRange));
+
+    res.status(200).json({
+      success: true,
+      analytics,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get recurring issues
+const getRecurringIssues = async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const issues = await analyticsService.getRecurringIssues(null, parseInt(days));
+
+    res.status(200).json({
+      success: true,
+      recurringIssues: issues,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get staff performance
+const getStaffPerformance = async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+
+    const performance = await analyticsService.getStaffPerformance(startDate);
+
+    res.status(200).json({
+      success: true,
+      staffPerformance: performance,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get predictive insights
+const getPredictiveInsights = async (req, res) => {
+  try {
+    const insights = await analyticsService.getPredictiveInsights();
+
+    res.status(200).json({
+      success: true,
+      insights,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get peak hours data
+const getPeakHours = async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const peakHours = await analyticsService.getPeakHours(parseInt(days));
+
+    res.status(200).json({
+      success: true,
+      peakHours,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get satisfaction metrics
+const getSatisfactionMetrics = async (req, res) => {
+  try {
+    const { days = 30 } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+
+    const satisfaction = await analyticsService.getSatisfactionMetrics(startDate);
+
+    res.status(200).json({
+      success: true,
+      satisfaction,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAdminStats,
   getStatistics,
   getPublicStatistics,
+  getDashboardAnalytics,
+  getRecurringIssues,
+  getStaffPerformance,
+  getPredictiveInsights,
+  getPeakHours,
+  getSatisfactionMetrics,
 };
