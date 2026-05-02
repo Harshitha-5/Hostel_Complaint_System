@@ -23,11 +23,9 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : (process.env.NODE_ENV === 'production' 
-      ? true
-      : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://127.0.0.1:5173']),
-    methods: ['GET', 'POST'],
-    credentials: false,
+    origin: "https://hostel-complaint-system-frontend-qbo0q2t7k.vercel.app",
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -71,10 +69,10 @@ app.io = io;
 
 // middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://127.0.0.1:5173'],
+  origin: "https://hostel-complaint-system-frontend-qbo0q2t7k.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(express.json());
 
