@@ -21,9 +21,15 @@ const FeatureToggle = require("./models/FeatureToggle");
 
 const app = express();
 const server = http.createServer(app);
+const allowedOrigins = [
+  "https://hostel-complaint-system-frontend.vercel.app",
+  "https://hostel-complaint-system-frontend-65xtoxqqa.vercel.app",
+  "https://hostel-complaint-syste-git-586a1a-harshitha-s-projects-f231349d.vercel.app"
+];
+
 const io = socketIo(server, {
   cors: {
-    origin: "https://hostel-complaint-system-frontend-qbo0q2t7k.vercel.app",
+    origin: allowedOrigins,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -69,10 +75,9 @@ app.io = io;
 
 // middleware
 app.use(cors({
-  origin: "https://hostel-complaint-system-frontend-qbo0q2t7k.vercel.app",
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"]
+  credentials: true
 }));
 app.use(express.json());
 
